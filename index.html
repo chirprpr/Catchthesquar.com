@@ -1,33 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Catch the Red Square - Mobile + Admin</title>
+<title>Catch the Red Square - Admin</title>
 <style>
 body { margin:0; background:#222; color:white; text-align:center; font-family:sans-serif; }
 canvas { background:#000; display:block; margin:20px auto; border:2px solid white; }
-
-/* Mobile buttons */
-button.control {
-  position: fixed;
-  width: 60px;
-  height: 60px;
-  font-size: 18px;
-  opacity: 0.7;
-  z-index: 999;
-}
-
-/* Hide mobile buttons on PC */
-@media screen and (min-width: 768px) {
-  button.control { display: none; }
-}
-
-/* Show mobile buttons on phones/tablets */
-@media screen and (max-width: 767px) {
-  #up { bottom: 120px; left: 80px; }
-  #down { bottom: 0px; left: 80px; }
-  #left { bottom: 60px; left: 20px; }
-  #right { bottom: 60px; left: 140px; }
-}
 
 /* Admin panel */
 #adminPanel {
@@ -47,19 +24,13 @@ button.control {
 
 <h1>Catch the Red Square!</h1>
 
-<!-- Admin panel visible -->
+<!-- Admin panel -->
 <div id="adminPanel">
   <input id="cmd" placeholder="admin command...">
   <button onclick="runCmd()">Run</button>
 </div>
 
 <canvas id="gameCanvas" width="400" height="400"></canvas>
-
-<!-- Mobile controls -->
-<button id="up" class="control">↑</button>
-<button id="down" class="control">↓</button>
-<button id="left" class="control">←</button>
-<button id="right" class="control">→</button>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
@@ -76,35 +47,24 @@ let frozen = false;
 // -----------------------
 // Admin password setup
 let admin = false;
-// SHA-256 hash of password "mypassword123"
-const adminHash = "ef92b778ba3e3dbb9f06c6d84a25ffef0b83a3dc091b2fa1b1397e69c4b8f5f3";
-
-// check password function
-async function checkPassword(input) {
-    const msgBuffer = new TextEncoder().encode(input);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
-    return hashHex === adminHash;
-}
+const adminPassword = "mypassword123"; // CHANGE THIS
 
 // -----------------------
-// RUN ADMIN COMMANDS
-async function runCmd() {
-    let input = document.getElementById("cmd").value.trim();
-    if(!input) return;
-
+// Run admin commands
+function runCmd() {
     if(!admin) {
         let pw = prompt("Enter admin password:");
-        if(await checkPassword(pw)) {
-            admin = true;
-            alert("Admin access granted!");
-        } else {
+        if(pw !== adminPassword) {
             alert("Wrong password!");
             document.getElementById("cmd").value = "";
             return;
         }
+        admin = true;
+        alert("Admin access granted!");
     }
+
+    let input = document.getElementById("cmd").value.trim();
+    if(!input) return;
 
     let parts = input.split(" ");
     let cmd = parts[0].toLowerCase();
@@ -124,7 +84,7 @@ async function runCmd() {
             target.x=Math.random()*360; target.y=Math.random()*360;
             score=0; frozen=false;
             break;
-        case "god": alert("God mode activated! (placeholder)"); break;
+        case "god": alert("God mode activated!"); break;
         default: alert("Unknown command!");
     }
 
@@ -133,17 +93,16 @@ async function runCmd() {
 }
 
 // -----------------------
-// MOBILE BUTTON CONTROLS (only for touch)
-document.getElementById("up").addEventListener('touchstart', () => { player.y -= playerSpeed; });
-document.getElementById("down").addEventListener('touchstart', () => { player.y += playerSpeed; });
-document.getElementById("left").addEventListener('touchstart', () => { player.x -= playerSpeed; });
-document.getElementById("right").addEventListener('touchstart', () => { player.x += playerSpeed; });
+// Keyboard controls
+document.addEventListener('keydown', e => {
+    if(e.key === 'ArrowUp') player.y -= playerSpeed;
+    if(e.key === 'ArrowDown') player.y += playerSpeed;
+    if(e.key === 'ArrowLeft') player.x -= playerSpeed;
+    if(e.key === 'ArrowRight') player.x += playerSpeed;
+});
 
 // -----------------------
-// KEYBOARD CONTROLS remain unchanged
-
-// -----------------------
-// GAME LOOP
+// Game loop
 function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
