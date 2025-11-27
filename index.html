@@ -8,22 +8,65 @@ canvas { background:#000; display:block; margin:20px auto; border:2px solid whit
 </style>
 </head>
 <body>
+
 <h1>Catch the Red Square!</h1>
+
+<!-- ⭐ ADMIN COMMAND BOX -->
+<input id="cmd" placeholder="admin command..." 
+style="position:fixed; bottom:10px; left:10px; padding:5px; z-index:999;">
+<button onclick="runCmd()" 
+style="position:fixed; bottom:10px; left:170px; padding:5px; z-index:999;">Run</button>
+
 <canvas id="gameCanvas" width="400" height="400"></canvas>
+
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+
+let playerSpeed = 10;
+let targetColor = 'yellow';
 
 let player = {x:180, y:180, size:40};
 let target = {x:Math.random()*360, y:Math.random()*360, size:30};
 let score = 0;
 
+// ======================
+// ⭐ ADMIN COMMANDS
+// ======================
+function runCmd() {
+  let c = document.getElementById("cmd").value.toLowerCase();
+
+  if (c === "speed") {
+    playerSpeed = 20;
+    alert("Player speed boosted!");
+  }
+
+  if (c === "tp") {
+    target.x = Math.random() * 360;
+    target.y = Math.random() * 360;
+    alert("Teleported target!");
+  }
+
+  if (c.startsWith("color ")) {
+    targetColor = c.split(" ")[1];
+    alert("Target color changed!");
+  }
+
+  document.getElementById("cmd").value = "";
+}
+
+// ======================
+// GAME CODE
+// ======================
 function draw() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
+
   ctx.fillStyle='red';
   ctx.fillRect(player.x, player.y, player.size, player.size);
-  ctx.fillStyle='yellow';
+
+  ctx.fillStyle = targetColor;
   ctx.fillRect(target.x, target.y, target.size, target.size);
+
   ctx.fillStyle='white';
   ctx.font='20px sans-serif';
   ctx.fillText('Score: ' + score, 10, 20);
@@ -34,6 +77,7 @@ function update() {
      player.x + player.size > target.x &&
      player.y < target.y + target.size &&
      player.y + player.size > target.y){
+
     score++;
     target.x = Math.random()*360;
     target.y = Math.random()*360;
@@ -41,20 +85,10 @@ function update() {
 }
 
 document.addEventListener('keydown', e => {
-  const s = 10;
-  if(e.key === 'ArrowUp') player.y -= s;
-  if(e.key === 'ArrowDown') player.y += s;
-  if(e.key === 'ArrowLeft') player.x -= s;
-  if(e.key === 'ArrowRight') player.x += s;
-  player.x = Math.max(0, Math.min(400-player.size, player.x));
-  player.y = Math.max(0, Math.min(400-player.size, player.y));
-});
+  if(e.key === 'ArrowUp') player.y -= playerSpeed;
+  if(e.key === 'ArrowDown') player.y += playerSpeed;
+  if(e.key === 'Arrow
 
-function loop() { update(); draw(); requestAnimationFrame(loop); }
-loop();
-</script>
-</body>
-</html>
 
 
 
