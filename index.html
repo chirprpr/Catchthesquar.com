@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Catch the Red Square</title>
+<title>Catch the Red Square - Super Admin</title>
 <style>
 body { margin:0; background:#222; color:white; text-align:center; font-family:sans-serif; }
 canvas { background:#000; display:block; margin:20px auto; border:2px solid white; }
@@ -11,11 +11,9 @@ canvas { background:#000; display:block; margin:20px auto; border:2px solid whit
 
 <h1>Catch the Red Square!</h1>
 
-<!-- ADMIN COMMAND BOX -->
-<input id="cmd" placeholder="admin command..." 
-style="position:fixed; bottom:10px; left:10px; padding:5px; z-index:999;">
-<button onclick="runCmd()" 
-style="position:fixed; bottom:10px; left:170px; padding:5px; z-index:999;">Run</button>
+<!-- Admin input box -->
+<input id="cmd" placeholder="admin command..." style="position:fixed; bottom:10px; left:10px; padding:5px; z-index:999;">
+<button onclick="runCmd()" style="position:fixed; bottom:10px; left:170px; padding:5px; z-index:999;">Run</button>
 
 <canvas id="gameCanvas" width="400" height="400"></canvas>
 
@@ -23,85 +21,92 @@ style="position:fixed; bottom:10px; left:170px; padding:5px; z-index:999;">Run</
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-let playerSpeed = 10;
-let targetColor = 'yellow';
-
 let player = {x:180, y:180, size:40};
 let target = {x:Math.random()*360, y:Math.random()*360, size:30};
 let score = 0;
 
-// ======================
-// ADMIN PASSWORD SYSTEM
-// ======================
-let admin = false;   // default: not admin
-const adminPassword = "mySecret123"; // <-- CHANGE THIS to your secret
+let playerSpeed = 10;
+let targetColor = 'yellow';
+let frozen = false;
+
+let admin = false;
+const adminPassword = "mySecret123"; // <-- change to your secret
 
 function runCmd() {
-  let cmd = document.getElementById("cmd").value.toLowerCase();
+    let cmd = document.getElementById("cmd").value.toLowerCase();
 
-  // ask for password if not already admin
-  if(!admin) {
-    let pw = prompt("Enter admin password:");
-    if(pw === adminPassword) {
-      admin = true;
-      alert("Admin activated!");
-    } else {
-      alert("Wrong password!");
-      document.getElementById("cmd").value = "";
-      return;
+    // ask password if not admin
+    if(!admin) {
+        let pw = prompt("Enter admin password:");
+        if(pw === adminPassword) {
+            admin = true;
+            alert("Admin activated!");
+        } else {
+            alert("Wrong password!");
+            document.getElementById("cmd").value = "";
+            return;
+        }
     }
-  }
 
-  // ✅ admin commands
-  if(cmd === "speed") { playerSpeed = 20; alert("Player speed boosted!"); }
-  if(cmd === "tp") { target.x = Math.random()*360; target.y = Math.random()*360; alert("Target teleported!"); }
-  if(cmd.startsWith("color ")) { targetColor = cmd.split(" ")[1]; alert("Target color changed!"); }
+    // ⭐ SUPER ADMIN COMMANDS
+    if(cmd === "speed") playerSpeed = 20;
+    if(cmd === "slow") playerSpeed = 10;
+    if(cmd === "tp") { target.x = Math.random()*360; target.y = Math.random()*360; }
+    if(cmd.startsWith("color ")) targetColor = cmd.split(" ")[1];
+    if(cmd.startsWith("size ")) player.size = parseInt(cmd.split(" ")[1]);
+    if(cmd.startsWith("score ")) score = parseInt(cmd.split(" ")[1]);
+    if(cmd === "freeze") frozen = true;
+    if(cmd === "spawn") { /* add extra target logic here */ alert("Spawn command not implemented yet"); }
+    if(cmd === "reset") { player.x=180; player.y=180; target.x=Math.random()*360; target.y=Math.random()*360; score=0; frozen=false; }
+    if(cmd === "god") alert("God mode activated! (placeholder)");
 
-  document.getElementById("cmd").value = "";
+    document.getElementById("cmd").value = "";
 }
 
 // ======================
 // GAME LOOP
 // ======================
 function draw() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  ctx.fillStyle='red';
-  ctx.fillRect(player.x, player.y, player.size, player.size);
+    // player
+    ctx.fillStyle='red';
+    ctx.fillRect(player.x, player.y, player.size, player.size);
 
-  ctx.fillStyle = targetColor;
-  ctx.fillRect(target.x, target.y, target.size, target.size);
+    // target
+    ctx.fillStyle = targetColor;
+    ctx.fillRect(target.x, target.y, target.size, target.size);
 
-  ctx.fillStyle='white';
-  ctx.font='20px sans-serif';
-  ctx.fillText('Score: ' + score, 10, 20);
+    // score
+    ctx.fillStyle='white';
+    ctx.font='20px sans-serif';
+    ctx.fillText('Score: ' + score, 10, 20);
 }
 
 function update() {
-  if(player.x < target.x + target.size &&
-     player.x + player.size > target.x &&
-     player.y < target.y + target.size &&
-     player.y + player.size > target.y){
-    score++;
-    target.x = Math.random()*360;
-    target.y = Math.random()*360;
-  }
+    if(!frozen && player.x < target.x + target.size &&
+       player.x + player.size > target.x &&
+       player.y < target.y + target.size &&
+       player.y + player.size > target.y){
+        score++;
+        target.x = Math.random()*360;
+        target.y = Math.random()*360;
+    }
 }
 
 document.addEventListener('keydown', e => {
-  if(e.key === 'ArrowUp') player.y -= playerSpeed;
-  if(e.key === 'ArrowDown') player.y += playerSpeed;
-  if(e.key === 'ArrowLeft') player.x -= playerSpeed;
-  if(e.key === 'ArrowRight') player.x += playerSpeed;
+    if(e.key === 'ArrowUp') player.y -= playerSpeed;
+    if(e.key === 'ArrowDown') player.y += playerSpeed;
+    if(e.key === 'ArrowLeft') player.x -= playerSpeed;
+    if(e.key === 'ArrowRight') player.x += playerSpeed;
 
-  player.x = Math.max(0, Math.min(400-player.size, player.x));
-  player.y = Math.max(0, Math.min(400-player.size, player.y));
+    player.x = Math.max(0, Math.min(400-player.size, player.x));
+    player.y = Math.max(0, Math.min(400-player.size, player.y));
 });
 
 function loop() { update(); draw(); requestAnimationFrame(loop); }
 loop();
 </script>
-
 </body>
 </html>
 
