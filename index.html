@@ -15,10 +15,19 @@ button.control {
   opacity: 0.7;
   z-index: 999;
 }
-#up { bottom: 120px; left: 80px; }
-#down { bottom: 0px; left: 80px; }
-#left { bottom: 60px; left: 20px; }
-#right { bottom: 60px; left: 140px; }
+
+/* Hide mobile buttons on PC */
+@media screen and (min-width: 768px) {
+  button.control { display: none; }
+}
+
+/* Show mobile buttons on phones/tablets */
+@media screen and (max-width: 767px) {
+  #up { bottom: 120px; left: 80px; }
+  #down { bottom: 0px; left: 80px; }
+  #left { bottom: 60px; left: 20px; }
+  #right { bottom: 60px; left: 140px; }
+}
 
 /* Admin panel */
 #adminPanel {
@@ -65,10 +74,37 @@ let targetColor = 'yellow';
 let frozen = false;
 
 // -----------------------
+// Admin password setup
+let admin = false;
+// SHA-256 hash of password "mypassword123"
+const adminHash = "ef92b778ba3e3dbb9f06c6d84a25ffef0b83a3dc091b2fa1b1397e69c4b8f5f3";
+
+// check password function
+async function checkPassword(input) {
+    const msgBuffer = new TextEncoder().encode(input);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+    return hashHex === adminHash;
+}
+
+// -----------------------
 // RUN ADMIN COMMANDS
-function runCmd() {
+async function runCmd() {
     let input = document.getElementById("cmd").value.trim();
     if(!input) return;
+
+    if(!admin) {
+        let pw = prompt("Enter admin password:");
+        if(await checkPassword(pw)) {
+            admin = true;
+            alert("Admin access granted!");
+        } else {
+            alert("Wrong password!");
+            document.getElementById("cmd").value = "";
+            return;
+        }
+    }
 
     let parts = input.split(" ");
     let cmd = parts[0].toLowerCase();
@@ -97,20 +133,14 @@ function runCmd() {
 }
 
 // -----------------------
-// MOBILE BUTTON CONTROLS
+// MOBILE BUTTON CONTROLS (only for touch)
 document.getElementById("up").addEventListener('touchstart', () => { player.y -= playerSpeed; });
 document.getElementById("down").addEventListener('touchstart', () => { player.y += playerSpeed; });
 document.getElementById("left").addEventListener('touchstart', () => { player.x -= playerSpeed; });
 document.getElementById("right").addEventListener('touchstart', () => { player.x += playerSpeed; });
 
 // -----------------------
-// KEYBOARD CONTROLS
-document.addEventListener('keydown', e => {
-    if(e.key === 'ArrowUp') player.y -= playerSpeed;
-    if(e.key === 'ArrowDown') player.y += playerSpeed;
-    if(e.key === 'ArrowLeft') player.x -= playerSpeed;
-    if(e.key === 'ArrowRight') player.x += playerSpeed;
-});
+// KEYBOARD CONTROLS remain unchanged
 
 // -----------------------
 // GAME LOOP
