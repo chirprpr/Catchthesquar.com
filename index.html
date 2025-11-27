@@ -1,21 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Catch the Red Square - Super Admin</title>
+<title>Catch the Red Square - Mobile + Admin</title>
 <style>
 body { margin:0; background:#222; color:white; text-align:center; font-family:sans-serif; }
 canvas { background:#000; display:block; margin:20px auto; border:2px solid white; }
+
+/* Mobile buttons */
+button.control {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  font-size: 18px;
+  opacity: 0.7;
+  z-index: 999;
+}
+#up { bottom: 120px; left: 80px; }
+#down { bottom: 0px; left: 80px; }
+#left { bottom: 60px; left: 20px; }
+#right { bottom: 60px; left: 140px; }
+
+/* Admin panel */
+#adminPanel {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid white;
+  border-radius: 8px;
+  padding: 5px;
+  z-index: 1000;
+}
+#cmd { padding:5px; }
 </style>
 </head>
 <body>
 
 <h1>Catch the Red Square!</h1>
 
-<!-- Admin input box -->
-<input id="cmd" placeholder="admin command..." style="position:fixed; bottom:10px; left:10px; padding:5px; z-index:999;">
-<button onclick="runCmd()" style="position:fixed; bottom:10px; left:170px; padding:5px; z-index:999;">Run</button>
+<!-- Admin panel visible -->
+<div id="adminPanel">
+  <input id="cmd" placeholder="admin command...">
+  <button onclick="runCmd()">Run</button>
+</div>
 
 <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+<!-- Mobile controls -->
+<button id="up" class="control">↑</button>
+<button id="down" class="control">↓</button>
+<button id="left" class="control">←</button>
+<button id="right" class="control">→</button>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
@@ -29,43 +64,56 @@ let playerSpeed = 10;
 let targetColor = 'yellow';
 let frozen = false;
 
-let admin = false;
-const adminPassword = "mySecret123"; // <-- change to your secret
-
+// -----------------------
+// RUN ADMIN COMMANDS
 function runCmd() {
-    let cmd = document.getElementById("cmd").value.toLowerCase();
+    let input = document.getElementById("cmd").value.trim();
+    if(!input) return;
 
-    // ask password if not admin
-    if(!admin) {
-        let pw = prompt("Enter admin password:");
-        if(pw === adminPassword) {
-            admin = true;
-            alert("Admin activated!");
-        } else {
-            alert("Wrong password!");
-            document.getElementById("cmd").value = "";
-            return;
-        }
+    let parts = input.split(" ");
+    let cmd = parts[0].toLowerCase();
+    let arg = parts[1];
+
+    switch(cmd) {
+        case "speed": playerSpeed = 20; break;
+        case "slow": playerSpeed = 10; break;
+        case "tp": target.x = Math.random()*360; target.y = Math.random()*360; break;
+        case "color": if(arg) targetColor = arg; break;
+        case "size": if(arg && !isNaN(parseInt(arg))) player.size = parseInt(arg); break;
+        case "score": if(arg && !isNaN(parseInt(arg))) score = parseInt(arg); break;
+        case "freeze": frozen = true; break;
+        case "spawn": alert("Spawn command not implemented yet"); break;
+        case "reset": 
+            player.x=180; player.y=180;
+            target.x=Math.random()*360; target.y=Math.random()*360;
+            score=0; frozen=false;
+            break;
+        case "god": alert("God mode activated! (placeholder)"); break;
+        default: alert("Unknown command!");
     }
 
-    // ⭐ SUPER ADMIN COMMANDS
-    if(cmd === "speed") playerSpeed = 20;
-    if(cmd === "slow") playerSpeed = 10;
-    if(cmd === "tp") { target.x = Math.random()*360; target.y = Math.random()*360; }
-    if(cmd.startsWith("color ")) targetColor = cmd.split(" ")[1];
-    if(cmd.startsWith("size ")) player.size = parseInt(cmd.split(" ")[1]);
-    if(cmd.startsWith("score ")) score = parseInt(cmd.split(" ")[1]);
-    if(cmd === "freeze") frozen = true;
-    if(cmd === "spawn") { /* add extra target logic here */ alert("Spawn command not implemented yet"); }
-    if(cmd === "reset") { player.x=180; player.y=180; target.x=Math.random()*360; target.y=Math.random()*360; score=0; frozen=false; }
-    if(cmd === "god") alert("God mode activated! (placeholder)");
-
     document.getElementById("cmd").value = "";
+    draw();
 }
 
-// ======================
+// -----------------------
+// MOBILE BUTTON CONTROLS
+document.getElementById("up").addEventListener('touchstart', () => { player.y -= playerSpeed; });
+document.getElementById("down").addEventListener('touchstart', () => { player.y += playerSpeed; });
+document.getElementById("left").addEventListener('touchstart', () => { player.x -= playerSpeed; });
+document.getElementById("right").addEventListener('touchstart', () => { player.x += playerSpeed; });
+
+// -----------------------
+// KEYBOARD CONTROLS
+document.addEventListener('keydown', e => {
+    if(e.key === 'ArrowUp') player.y -= playerSpeed;
+    if(e.key === 'ArrowDown') player.y += playerSpeed;
+    if(e.key === 'ArrowLeft') player.x -= playerSpeed;
+    if(e.key === 'ArrowRight') player.x += playerSpeed;
+});
+
+// -----------------------
 // GAME LOOP
-// ======================
 function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -92,21 +140,16 @@ function update() {
         target.x = Math.random()*360;
         target.y = Math.random()*360;
     }
-}
-
-document.addEventListener('keydown', e => {
-    if(e.key === 'ArrowUp') player.y -= playerSpeed;
-    if(e.key === 'ArrowDown') player.y += playerSpeed;
-    if(e.key === 'ArrowLeft') player.x -= playerSpeed;
-    if(e.key === 'ArrowRight') player.x += playerSpeed;
 
     player.x = Math.max(0, Math.min(400-player.size, player.x));
     player.y = Math.max(0, Math.min(400-player.size, player.y));
-});
+}
 
 function loop() { update(); draw(); requestAnimationFrame(loop); }
 loop();
 </script>
+
 </body>
 </html>
+
 
