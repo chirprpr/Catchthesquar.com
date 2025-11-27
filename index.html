@@ -11,7 +11,7 @@ canvas { background:#000; display:block; margin:20px auto; border:2px solid whit
 
 <h1>Catch the Red Square!</h1>
 
-<!-- ⭐ ADMIN COMMAND BOX -->
+<!-- ADMIN COMMAND BOX -->
 <input id="cmd" placeholder="admin command..." 
 style="position:fixed; bottom:10px; left:10px; padding:5px; z-index:999;">
 <button onclick="runCmd()" 
@@ -24,8 +24,6 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 let playerSpeed = 10;
-
-// FIX: your game originally uses yellow target
 let targetColor = 'yellow';
 
 let player = {x:180, y:180, size:40};
@@ -33,57 +31,57 @@ let target = {x:Math.random()*360, y:Math.random()*360, size:30};
 let score = 0;
 
 // ======================
-// ⭐ ADMIN COMMANDS
+// ADMIN PASSWORD SYSTEM
 // ======================
+let admin = false;   // default: not admin
+const adminPassword = "mySecret123"; // <-- CHANGE THIS to your secret
+
 function runCmd() {
-  let c = document.getElementById("cmd").value.toLowerCase();
+  let cmd = document.getElementById("cmd").value.toLowerCase();
 
-  if (c === "speed") {
-    playerSpeed = 20;
-    alert("Player speed boosted!");
+  // ask for password if not already admin
+  if(!admin) {
+    let pw = prompt("Enter admin password:");
+    if(pw === adminPassword) {
+      admin = true;
+      alert("Admin activated!");
+    } else {
+      alert("Wrong password!");
+      document.getElementById("cmd").value = "";
+      return;
+    }
   }
 
-  if (c === "tp") {
-    target.x = Math.random() * 360;
-    target.y = Math.random() * 360;
-    alert("Teleported target!");
-  }
-
-  if (c.startsWith("color ")) {
-    targetColor = c.split(" ")[1];
-    alert("Target color changed!");
-  }
+  // ✅ admin commands
+  if(cmd === "speed") { playerSpeed = 20; alert("Player speed boosted!"); }
+  if(cmd === "tp") { target.x = Math.random()*360; target.y = Math.random()*360; alert("Target teleported!"); }
+  if(cmd.startsWith("color ")) { targetColor = cmd.split(" ")[1]; alert("Target color changed!"); }
 
   document.getElementById("cmd").value = "";
 }
 
 // ======================
-// GAME CODE
+// GAME LOOP
 // ======================
 function draw() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // PLAYER (red)
   ctx.fillStyle='red';
   ctx.fillRect(player.x, player.y, player.size, player.size);
 
-  // TARGET (color controlled by admin)
   ctx.fillStyle = targetColor;
   ctx.fillRect(target.x, target.y, target.size, target.size);
 
-  // SCORE TEXT
   ctx.fillStyle='white';
   ctx.font='20px sans-serif';
   ctx.fillText('Score: ' + score, 10, 20);
 }
 
 function update() {
-  // collision
   if(player.x < target.x + target.size &&
      player.x + player.size > target.x &&
      player.y < target.y + target.size &&
      player.y + player.size > target.y){
-
     score++;
     target.x = Math.random()*360;
     target.y = Math.random()*360;
@@ -107,6 +105,3 @@ loop();
 </body>
 </html>
 
-
-
-                               
