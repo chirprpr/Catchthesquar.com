@@ -24,6 +24,8 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 let playerSpeed = 10;
+
+// FIX: your game originally uses yellow target
 let targetColor = 'yellow';
 
 let player = {x:180, y:180, size:40};
@@ -61,18 +63,22 @@ function runCmd() {
 function draw() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
+  // PLAYER (red)
   ctx.fillStyle='red';
   ctx.fillRect(player.x, player.y, player.size, player.size);
 
+  // TARGET (color controlled by admin)
   ctx.fillStyle = targetColor;
   ctx.fillRect(target.x, target.y, target.size, target.size);
 
+  // SCORE TEXT
   ctx.fillStyle='white';
   ctx.font='20px sans-serif';
   ctx.fillText('Score: ' + score, 10, 20);
 }
 
 function update() {
+  // collision
   if(player.x < target.x + target.size &&
      player.x + player.size > target.x &&
      player.y < target.y + target.size &&
@@ -87,8 +93,19 @@ function update() {
 document.addEventListener('keydown', e => {
   if(e.key === 'ArrowUp') player.y -= playerSpeed;
   if(e.key === 'ArrowDown') player.y += playerSpeed;
-  if(e.key === 'Arrow
+  if(e.key === 'ArrowLeft') player.x -= playerSpeed;
+  if(e.key === 'ArrowRight') player.x += playerSpeed;
 
+  player.x = Math.max(0, Math.min(400-player.size, player.x));
+  player.y = Math.max(0, Math.min(400-player.size, player.y));
+});
+
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+loop();
+</script>
+
+</body>
+</html>
 
 
 
